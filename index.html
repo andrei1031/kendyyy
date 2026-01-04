@@ -14,7 +14,14 @@
     </style>
 </head>
 <body>
-    <div>
+    <div id="countdown-container" style="display: none; flex-direction: column; justify-content: center; align-items: center; height: 80vh;">
+        <h1 style="font-size: 3rem; margin-bottom: 20px;">Wait for it... 💖</h1>
+        <div id="timer" style="font-size: 2.5rem; font-weight: bold; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        <p style="margin-top: 20px; font-size: 1.2rem;">Opening on Jan 9, 2026 @ 00:00</p>
+        <button onclick="attemptBypass()" style="margin-top: 20px; background: transparent; border: 1px solid #aaa; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; color: #555;">🔑 Secret Access</button>
+    </div>
+
+    <div id="main-content" style="display: none;">
         <h1>Happy Birthday Babeee!</h1>
         <div id="message" style="margin: 20px 0;">Click the button "click Me" babe para lumabas mga message</div>
         
@@ -24,6 +31,58 @@
     </div>
 
     <script>
+        // --- COUNTDOWN LOGIC ---
+        const targetDate = new Date('January 9, 2026 00:00:00').getTime();
+        const countdownContainer = document.getElementById('countdown-container');
+        const mainContent = document.getElementById('main-content');
+        const timerEl = document.getElementById('timer');
+
+        function updateVisibility() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            const bypass = localStorage.getItem('bypass_countdown');
+
+            if (distance < 0 || bypass === 'true') {
+                // Time is up: Show main content
+                countdownContainer.style.display = 'none';
+                mainContent.style.display = 'block';
+                return false; // Stopped
+            } else {
+                // Countdown active
+                countdownContainer.style.display = 'flex';
+                mainContent.style.display = 'none';
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                timerEl.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                return true; // Continue
+            }
+        }
+
+        // Initial check
+        if (updateVisibility()) {
+            const x = setInterval(function() {
+                if (!updateVisibility()) {
+                    clearInterval(x);
+                    window.location.href = "index.html"; // Redirect/Reload as requested
+                }
+            }, 1000);
+        }
+
+        function attemptBypass() {
+            const password = prompt("Enter the secret password to bypass the countdown:");
+            if (password === "love") { // You can change "love" to any password you want
+                localStorage.setItem('bypass_countdown', 'true');
+                alert("Access Granted! Redirecting...");
+                window.location.reload();
+            } else if (password !== null) {
+                alert("Incorrect password!");
+            }
+        }
+
         const messages = [
             "Sorry ang super simple babe huhuhuh",
             "happy birthday babe",

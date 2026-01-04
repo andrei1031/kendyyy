@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Protect this page until Jan 9, 2026
+        const targetDate = new Date('January 9, 2026 00:00:00').getTime();
+        const bypass = localStorage.getItem('bypass_countdown');
+        if (new Date().getTime() < targetDate && bypass !== 'true') {
+            window.location.href = "index.html";
+        }
+    </script>
     <title>Happy 21st Birthday Kendy!</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
