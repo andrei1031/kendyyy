@@ -591,7 +591,6 @@
             position: absolute;
             bottom: 10px;
             font-size: 40px;
-            transition: left 0.1s linear;
             user-select: none;
         }
         .falling-heart {
@@ -1903,6 +1902,26 @@
             100% { box-shadow: 0 0 0 0 rgba(216, 27, 96, 0); }
         }
 
+        /* --- EQUALIZER STYLES --- */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            margin-left: 10px;
+            gap: 3px;
+        }
+        .bar {
+            width: 4px;
+            background: var(--main);
+            height: 3px;
+            border-radius: 2px;
+        }
+        .equalizer.active .bar { animation: equalize 0.5s infinite alternate; }
+        .equalizer.active .bar:nth-child(1) { animation-delay: -0.2s; }
+        .equalizer.active .bar:nth-child(2) { animation-delay: -0.4s; }
+        .equalizer.active .bar:nth-child(3) { animation-delay: -0.6s; }
+        @keyframes equalize { 0% { height: 3px; } 100% { height: 15px; } }
+
         /* --- LOADING SCREEN --- */
         #loading-screen {
             position: fixed;
@@ -2215,6 +2234,7 @@
     <div id="loading-screen">
         <div class="loader-heart">💖</div>
         <div class="loader-text">Loading Memories...</div>
+        <div class="loader-text">Use Earphones for better experience</div>
     </div>
 
     <div id="scavenger-inventory">
@@ -2471,7 +2491,7 @@
         </section>
 
         <section class="section fade-in-section" id="media">
-            <div class="section-title">Video Message Gallery 📹</div>
+            <div class="section-title">Video Gallery 📹</div>
             <div class="new-gallery-container" style="max-width: 800px;">
                 <p class="hero-desc">Special video messages and memories! Click to watch and enjoy.</p>
                 
@@ -2728,7 +2748,7 @@
             
             <div style="max-width: 400px; margin: 0 auto;">
                 <div style="border-radius: 1rem; overflow: hidden; box-shadow: var(--shadow); border: 2px solid var(--accent);">
-                    <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2Guz1b911CbpG8L92cnglI?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                    <div id="spotify-embed"></div>
                 </div>
             
                 <div class="spotify-lyrics-container">
@@ -2815,6 +2835,11 @@
     <div class="music-widget">
         <button id="music-toggle" class="music-btn">🎵</button>
         <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
+        <div id="equalizer" class="equalizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
         <audio id="bg-music" loop preload="auto">
             <source src="music/song.mp3" type="audio/mpeg">
         </audio>
@@ -3063,7 +3088,7 @@
         "The comfort of your presence.",
         "Your independence.",
         "The way you handle criticism with grace.",
-        "Your passion for reading a good book.",
+        "Your passion for reading a good book(Wattpad).",
         "The depth of your empathy.",
         "Your inner fire.",
         "The quiet trust we share.",
@@ -3073,7 +3098,7 @@
         "Your beautiful, unique perspective on life.",
         "Your commitment to self-care.",
         "The fun we have together.",
-        "Your taste in music.",
+        "Your taste in music(mauiii wawieeeee).",
         "The way you can multitask with ease.",
         "Your natural beauty, even first thing in the morning.",
         "Your loyalty.",
@@ -3102,7 +3127,7 @@
         "The incredible depth of your soul.",
         "Your quiet strength when you'm tired but keep going.",
         "The sparkle in your eyes when you're excited.",
-        "Your ability to make healthy choices(minsan WHAHHA).",
+        "Your ability to make healthy choices(sometimes WHAHHA).",
         "Your infectious energy.",
         "The way you can be serious and silly in the same hour.",
         "Your dreams for the future.",
@@ -3207,7 +3232,7 @@
         P: "is for 'Patient', especially with me when I'm stressy.",
         Q: "is for 'Queen', because you deserve the world.",
         R: "is for the dreaded R A T. I promise to keep you safe from them! 🐭",
-        S: "is for Sanrio, your favorite cute characters, and my 'Smile'.",
+        S: "is for Sanrio, your favorite cute characters, and your 'Smile'.",
         T: "is for 'Thoughtful', always remembering the small things.",
         U: "is for 'Unique', there is truly no one else like you.",
         V: "is for 'Vibes', the good ones you bring wherever you go.",
@@ -3240,7 +3265,7 @@
         {
             q: "What do you think is my most favorite part about your personality?",
             options: ["Your humor", "Your intelligence", "Your kindness", "Your determination"],
-            answer: "Your kindness"
+            answer: ["Your humor", "Your intelligence", "Your kindness", "Your determination"]
         },
         {
             q: "What's the name of the place where we watched the most amazing sunset?",
@@ -3285,8 +3310,12 @@
 
         quizQuestions.forEach((q, index) => {
             const selected = document.querySelector(`input[name="q${index}"]:checked`);
-            if (selected && selected.value === q.answer) {
-                correctCount++;
+            if (selected) {
+                if (Array.isArray(q.answer)) {
+                    if (q.answer.includes(selected.value)) correctCount++;
+                } else if (selected.value === q.answer) {
+                    correctCount++;
+                }
             }
         });
 
@@ -3484,6 +3513,7 @@
         let gameInterval;
         let timerInterval;
         let gameActive = false;
+        let animationFrameId;
 
         // Unified function to calculate player position based on clientX
         function updatePlayerPosition(clientX) {
@@ -3551,23 +3581,37 @@
             startGameBtn.style.display = 'none';
             instructions.style.display = 'none';
 
-            gameInterval = setInterval(() => {
-                createHeart();
-                checkCollisions();
-            }, 300);
+            // Spawn hearts periodically
+            gameInterval = setInterval(createHeart, 300);
+
+            // Game loop for smooth collision detection
+            function loop() {
+                if (gameActive) {
+                    checkCollisions();
+                    animationFrameId = requestAnimationFrame(loop);
+                }
+            }
+            loop();
 
             timerInterval = setInterval(() => {
                 timeLeft--;
                 updateGameStats();
                 if (timeLeft <= 0) {
-                    clearInterval(gameInterval);
-                    clearInterval(timerInterval);
-                    gameActive = false;
-                    startGameBtn.style.display = 'inline-block';
-                    instructions.style.display = 'block';
-                    instructions.innerText = `Game Over! Your final score is ${score}. Play again?`;
+                    endGame();
                 }
             }, 1000);
+        }
+        
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            cancelAnimationFrame(animationFrameId);
+            gameActive = false;
+            startGameBtn.style.display = 'inline-block';
+            instructions.style.display = 'block';
+            instructions.innerText = `Game Over! Your final score is ${score}. Play again?`;
+            // Clear remaining hearts
+            document.querySelectorAll('.falling-heart').forEach(h => h.remove());
         }
 
         startGameBtn.addEventListener('click', startGame);
@@ -4101,6 +4145,7 @@
         const musicToggleBtn = document.getElementById('music-toggle');
         const bgMusicAudio = document.getElementById('bg-music');
         const volumeSlider = document.getElementById('volume-slider');
+        const equalizer = document.getElementById('equalizer');
 
         if (musicToggleBtn && bgMusicAudio) {
             // Initialize volume
@@ -4121,6 +4166,7 @@
                     bgMusicAudio.play().then(() => {
                         musicToggleBtn.textContent = '⏸';
                         musicToggleBtn.classList.add('playing');
+                        if (equalizer) equalizer.classList.add('active');
 
                         // Fade in effect
                         let fadeVol = 0;
@@ -4141,6 +4187,7 @@
                     bgMusicAudio.pause();
                     musicToggleBtn.textContent = '🎵';
                     musicToggleBtn.classList.remove('playing');
+                    if (equalizer) equalizer.classList.remove('active');
                 }
             });
 
@@ -4224,20 +4271,71 @@
         const heroWrap = document.querySelector('.hero-img-wrap');
         const heroContent = document.querySelector('.hero-content');
 
+        let isScrolling = false;
         window.addEventListener('scroll', () => {
-            const scrollPosition = window.scrollY;
-            // Stop calculations if scrolled far past hero to save performance
-            if (scrollPosition > 1000) return;
-
-            if (heroWrap) {
-                heroWrap.style.transform = `translateY(${scrollPosition * 0.2}px)`;
-                heroWrap.style.opacity = 1 - Math.min(scrollPosition / 800, 1);
-            }
-            if (heroContent) {
-                heroContent.style.transform = `translateY(${scrollPosition * 0.1}px)`;
-                heroContent.style.opacity = 1 - Math.min(scrollPosition / 600, 1);
+            if (!isScrolling) {
+                window.requestAnimationFrame(() => {
+                    const scrollPosition = window.scrollY;
+                    if (scrollPosition <= 1000) {
+                        if (heroWrap) {
+                            heroWrap.style.transform = `translateY(${scrollPosition * 0.2}px)`;
+                            heroWrap.style.opacity = 1 - Math.min(scrollPosition / 800, 1);
+                        }
+                        if (heroContent) {
+                            heroContent.style.transform = `translateY(${scrollPosition * 0.1}px)`;
+                            heroContent.style.opacity = 1 - Math.min(scrollPosition / 600, 1);
+                        }
+                    }
+                    isScrolling = false;
+                });
+                isScrolling = true;
             }
         });
+    </script>
+
+    <!-- SPOTIFY EMBED API LOGIC -->
+    <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+    <script>
+        window.onSpotifyIframeApiReady = (IFrameAPI) => {
+            const element = document.getElementById('spotify-embed');
+            const options = {
+                uri: 'spotify:track:2Guz1b911CbpG8L92cnglI',
+                width: '100%',
+                height: '352',
+            };
+            const callback = (EmbedController) => {
+                EmbedController.addListener('playback_update', e => {
+                    const bgMusic = document.getElementById('bg-music');
+                    const musicBtn = document.getElementById('music-toggle');
+                    const equalizer = document.getElementById('equalizer');
+                    
+                    if (e.data.isPaused === false) {
+                        // Spotify is playing
+                        if (bgMusic && !bgMusic.paused) {
+                            bgMusic.pause();
+                            bgMusic.dataset.autoPaused = 'true';
+                            if (musicBtn) {
+                                musicBtn.textContent = '🎵';
+                                musicBtn.classList.remove('playing');
+                                if (equalizer) equalizer.classList.remove('active');
+                            }
+                        }
+                    } else {
+                        // Spotify is paused
+                        if (bgMusic && bgMusic.dataset.autoPaused === 'true') {
+                            bgMusic.play();
+                            bgMusic.dataset.autoPaused = 'false';
+                            if (musicBtn) {
+                                musicBtn.textContent = '⏸';
+                                musicBtn.classList.add('playing');
+                                if (equalizer) equalizer.classList.add('active');
+                            }
+                        }
+                    }
+                });
+            };
+            IFrameAPI.createController(element, options, callback);
+        };
     </script>
 </body>
 </html>
