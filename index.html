@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ready for a Surprise?</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: pink;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Happy Birthday Babeee!</h1>
+        <div id="message" style="margin: 20px 0;">Click the button "click Me" babe para lumabas mga message</div>
+        
+        <button id="magicBtn" style="padding: 10px;">Click Me</button>
+
+        <div id="clickCounter" style="margin-top: 20px;">Clicks: 0</div>
+    </div>
+
+    <script>
+        const messages = [
+            "Sorry ang super simple babe huhuhuh",
+            "happy birthday babe",
+            "Happy 5th Monthsary din pala satin babe! ❤️",
+            "I love you so much bebe",
+            "sorry sa lahat ng mga nagawa ko na nakasakit sayo babe",
+            "Thank you for being so patient with me",
+            "Thank you for loving me unconditionally",
+            "Ready? isang click pa eto na totoo na to",
+        ];
+        let clickCount = 0;
+        
+        const btn = document.getElementById('magicBtn');
+        const msg = document.getElementById('message');
+        const clickCounter = document.getElementById('clickCounter');   // Get the new click counter element
+
+        // Function to update the click counter display
+        function updateClickCounter() {
+            clickCounter.textContent = `Clicks: ${clickCount}`;
+        }
+        
+        // Initial display update
+        updateClickCounter();
+
+        btn.addEventListener('click', () => {
+            // Increment the click counter
+            clickCount++;
+            
+            // Update the displays immediately
+            updateClickCounter();
+
+            if (clickCount <= messages.length) {
+                // Update the message if there are still messages to show
+                msg.textContent = messages[clickCount - 1]; // Use clickCount - 1 for array index
+            } 
+            
+            // Check if all steps (clicks) have been completed
+            if (clickCount > messages.length) {
+                // --- FULL-FORCE FEATURE #1: DYNAMIC FINAL MESSAGE ---
+                msg.innerHTML = "Prepare for the next level!";
+                btn.textContent = "Loading Surprise...";
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    window.location.href = "home.html";
+                }, 2000); // Increased delay for message visibility
+            }
+        });
+    </script>
+</body>
+</html>
